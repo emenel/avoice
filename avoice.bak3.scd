@@ -60,7 +60,7 @@ s.waitForBoot {
 			var sig = SwitchDelay.ar(
 				in: In.ar(in),
 				drylevel: 0,
-				wetlevel: 0.7,
+				wetlevel: 1,
 				delaytime: delaytime,
 				delayfactor: delayfactor,
 				maxdelaytime: 20.0
@@ -74,25 +74,14 @@ s.waitForBoot {
 		SynthDef.new(\amb, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2|
 			var sig = Warp1.ar(numChannels: 2, bufnum: bufnum, pointer: Lag3.kr(position, dur/3), freqScale: Lag3.kr(speed, dur/2), windowSize: Lag3.kr(win, dur/3), envbufnum: -1, overlaps: Lag3.kr(overlaps,dur/5), windowRandRatio: Lag3.kr(rand,dur/5), interp: 2, mul: Lag3.kr(amp, dur/5), add: 0);
 
-			Out.ar(out, sig*0.8);
-		}).add;
-
-
-		SynthDef.new(\tone, {|freq, out, amp = 0.8, gate = 1, dur|
-			var sig;
-			var env = Env.asr(0.5, 1, 2, -4.0);
-			sig = DynKlang.ar(`[ freq, [0.33,0.33,0.33] ], 1, 0);
-			sig = Mix.new([sig, HPF.ar(WhiteNoise.ar(0.02), 15000, 1)]);
-			sig = Pan2.ar(sig, FSinOsc.kr(0.25), 1)*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
-			Out.ar(out, sig*amp)
+			Out.ar(out, sig);
 		}).add;
 	);
-
-	s.sync();
 
 	(
 		Pdef(\ppBase,
 			Pbind(\instrument, \phonsynth,
+				// \bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), inf),
 				\dur, Pfunc({|d| (s.cachedBufferAt(d.bufnum).duration)-0.1}),
 				\speed, Pwhite(0.9,1.1,inf),
 				\legato, 1.1
@@ -113,34 +102,31 @@ s.waitForBoot {
 			out: 1
 		]);
 
-		Pdef(\tonePlay, Pbind(\instrument, \tone, \dur, Pwhite(0.5,10,3), \legato, 1.05, \root, -12, \degree, Ptuple([Pxrand((0..12), 3), Pxrand((0..12), 3), Pxrand((0..12), 3)]), \scale, Scale.new(#[ 0, 1, 3, 5, 7, 8, 10 ], 13)));
-
-		Pdef(\ambMono, Pseq([
+		~ambSeq = Pseq([
 			Plazy({
 				var length = [2, 5, 10, 15].choose;
 				Pmono(\amb,
 					\bufnum, Pxrand(~ambbufs, length),
-					\amp, Pseq([Pwhite(0.2, 0.3, length), 0], length),
-					\speed, Pwhite(0.01, 3.0, length),
+					\amp, Pseq([Pwhite(0.2, 0.8, length), 0], length),
+					\speed, Pwhite(0.01, 5.0, length),
 					\position, Pwhite(0, 1.0, length),
 					\win, Plprand(0.05, 10, length),
-					\dur, Pwhite(1, 15.0,length),
+					\dur, Pseq([Pwhite(0.5, 15.0, 5), Pwhite(10,20,1)], length),
 					\rand, Plprand(0.1, 1, length),
 					\overlaps, Pwhite(2, 16, length),
 					\legato, 1.05,
 					\out, 0//2
 				)
-		}), Pseq([Rest(10)], 1)], inf));
+		}), Prand((10..30)).collect(Rest(_))], inf);
 
-		Pdef(\ambPlayer, Pdef(\ambMono));
-
-		Pdef(\ambPlayer).fadeTime = 1;
 	);
 
 	(
 
 		~target_r = Pxrand([
 			~getBufsForPhrase.value(["h","eh","l","oh"]),
+			~getBufsForPhrase.value(["i"]),
+			~getBufsForPhrase.value(["a", "m"]),
 			~getBufsForPhrase.value(["s","p","ee","k","ee","ng"]),
 			~getBufsForPhrase.value(["d", "aw", "n"]),
 			~getBufsForPhrase.value(["d","r","ee","m"]),
@@ -156,7 +142,6 @@ s.waitForBoot {
 			~getBufsForPhrase.value(["s","t","ai","s","ih","s"]),
 			~getBufsForPhrase.value(["s","p","i","r","a","l"]),
 			~getBufsForPhrase.value(["t","r","a","n","s","f","oh","r","m"]),
-			~getBufsForPhrase.value(["n","au","th","ee","ng","n","eh","s"])
 		], inf);
 
 		r = Routine.new({|inval|
@@ -168,7 +153,7 @@ s.waitForBoot {
 			var pause = 1; //init placeholder pause
 			var initSum = (newvals-target).sum.abs;
 
-			// 30.wait;
+			30.wait;
 
 			loop {
 
@@ -176,13 +161,11 @@ s.waitForBoot {
 					i = i+1;
 					pause = 1;
 
-					Pdef(\ambPlayer, Pdef(\tonePlay));
-
 					if(i == 4, {
 						i = 0;
 						target = List.newUsing(ts.next);
 						3.wait;
-						// ["next target:", target].postln;
+						["next target:", target].postln;
 
 						if(target.size > newvals.size, {
 							(target.size - newvals.size).do({
@@ -197,16 +180,11 @@ s.waitForBoot {
 							initSum = (newvals-target).sum.abs;
 						});
 
-						((30.rand)+10).wait;
-
-						Pdef(\ambPlayer, Pdef(\ambMono));
-
-						((30.rand)+5).wait;
-
+						rrand(15,25).wait;
 					});
 				});
 
-				// ["target: ", target, "newvals:", newvals, "i:", i].postln;
+				["target: ", target, "newvals:", newvals, "i:", i].postln;
 
 				target.do({ |item, j|
 					var v = newvals[j];
@@ -218,13 +196,18 @@ s.waitForBoot {
 					{v < item} {v = v+dlt};
 
 					newvals.put(j,v);
+
+					// Pdef(\pp, Pbind(\instrument, \phonsynth, \dur, 0.3, \bufnum, Pseq([~phonbufs[v]], 1)));
+
+					// Synth(\phonsynth, [\bufnum, ~phonbufs[v]]);
+					// 0.25.wait;
 				});
 
 				Pdef(\pp, Pbind(\bufnum, Pseq(newvals, 1), \amp, 0.7) <> Pdef(\ppBase));
 
 				//determine pause with velocity
 				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 7, 0.1, -3);
-				// pause.postln;
+				pause.postln;
 
 				pause.yield;
 			}
@@ -234,16 +217,20 @@ s.waitForBoot {
 	);
 
 	(
+
 		//start everything
-		Pdef(\ambPlayer).play;
+		~ambSeq.play;
+
 		Pdef(\pp).play;
-		~voiceDelPlayer = ~voiceDel.play;
+		~voiceDel.play;
+
 		r.reset;
 		r.play;
+
 	);
 
 }
 
 // RECORD TO MULTICHANNEL FILE
-Server.default.record(numChannels: 2);
-Server.default.stopRecording;
+// Server.default.record(numChannels: 2);
+// Server.default.stopRecording;
