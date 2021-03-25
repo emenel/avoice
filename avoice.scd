@@ -245,5 +245,5 @@ s.waitForBoot {
 }
 
 // RECORD TO MULTICHANNEL FILE
-Server.default.record(numChannels: 2);
-Server.default.stopRecording;
+// Server.default.record(numChannels: 2);
+// Server.default.stopRecording;
