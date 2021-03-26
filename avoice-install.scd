@@ -1,13 +1,4 @@
 (
-// s.options.outDevice = "MOTU UltraLite mk3 Hybrid";
-// s.options.inDevice = "MOTU UltraLite mk3 Hybrid";
-
-// s.options.outDevice = "Universal Audio Thunderbolt";
-// s.options.inDevice = "Universal Audio Thunderbolt";
-
-// s.options.outDevice = "MOTU Audio ASIO";
-// s.options.inDevice = "MOTU Audio ASIO";
-
 s.options.numOutputBusChannels = 4;
 
 s.options.sampleRate = 44100;
@@ -52,7 +43,6 @@ s.waitForBoot {
 	(
 		SynthDef.new(\phonsynth, {|bufnum = 0, amp = 0, speed = 1, dur = 1, out = 0, bufstart = 10|
 			var sig = PlayBuf.ar(1, bufnum, Lag3.kr(speed, dur/2), startPos: bufstart, doneAction: Done.freeSelf);
-			// sig = LPF.ar(sig, 17000, 1, 0);
 			Out.ar([out,~vdelbus.index], sig*amp);
 		}).add;
 
@@ -65,18 +55,23 @@ s.waitForBoot {
 				delayfactor: delayfactor,
 				maxdelaytime: 20.0
 			);
-			// sig = GrainIn.ar(1, Impulse.kr(32), 1, sig, 0, -1, 512, 0.1, 0);
 			sig = PitchShift.ar(in: sig, windowSize: win, pitchRatio: 1, pitchDispersion: 0.5, timeDispersion: 0.001, mul: 1, add: 0);
-			// sig = LPF.ar(sig, rrand(440,15000), 1, 0);
 			Out.ar(out, sig);
 		}).add;
 
 		SynthDef.new(\amb, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2|
-			var sig = Warp1.ar(numChannels: 2, bufnum: bufnum, pointer: Lag3.kr(position, dur/3), freqScale: Lag3.kr(speed, dur/2), windowSize: Lag3.kr(win, dur/3), envbufnum: -1, overlaps: Lag3.kr(overlaps,dur/5), windowRandRatio: Lag3.kr(rand,dur/5), interp: 2, mul: Lag3.kr(amp, dur/5), add: 0);
-
+			var sig = Warp1.ar(numChannels: 2,
+				bufnum: bufnum,
+				pointer: Lag3.kr(position, dur/3),
+				freqScale: Lag3.kr(speed, dur/2),
+				windowSize: Lag3.kr(win, dur/3),
+				envbufnum: -1,
+				overlaps: Lag3.kr(overlaps,dur/5),
+				windowRandRatio: Lag3.kr(rand,dur/5),
+				interp: 2,
+				mul: Lag3.kr(amp, dur/5), add: 0);
 			Out.ar(out, sig*0.8);
 		}).add;
-
 
 		SynthDef.new(\tone, {|freq, out, amp = 0.8, gate = 1, dur|
 			var sig;
@@ -120,17 +115,17 @@ s.waitForBoot {
 				var length = [2, 5, 10, 15].choose;
 				Pmono(\amb,
 					\bufnum, Pxrand(~ambbufs, length),
-					\amp, Pseq([Pwhite(0.2, 0.3, length), 0], length),
+					\amp, Pseq([Pwhite(0.2, 0.3, length-2), 0, 0], 1),
 					\speed, Pwhite(0.01, 3.0, length),
 					\position, Pwhite(0, 1.0, length),
 					\win, Plprand(0.05, 10, length),
-					\dur, Pwhite(1, 15.0,length),
+					\dur, Pwhite(3, 15, length),
 					\rand, Plprand(0.1, 1, length),
 					\overlaps, Pwhite(2, 16, length),
 					\legato, 1.05,
 					\out, 2
 				)
-		}), Pseq([Rest(10)], 1)], inf));
+		})], inf));
 
 		Pdef(\ambPlayer, Pdef(\ambMono));
 
@@ -182,7 +177,6 @@ s.waitForBoot {
 						i = 0;
 						target = List.newUsing(ts.next);
 						3.wait;
-						// ["next target:", target].postln;
 
 						if(target.size > newvals.size, {
 							(target.size - newvals.size).do({
@@ -206,8 +200,6 @@ s.waitForBoot {
 					});
 				});
 
-				// ["target: ", target, "newvals:", newvals, "i:", i].postln;
-
 				target.do({ |item, j|
 					var v = newvals[j];
 					var ldlt = dlt;
@@ -224,7 +216,6 @@ s.waitForBoot {
 
 				//determine pause with velocity
 				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 7, 0.1, -3);
-				// pause.postln;
 
 				pause.yield;
 			}
@@ -236,6 +227,7 @@ s.waitForBoot {
 	(
 		//start everything
 		Pdef(\ambPlayer).play;
+		Pdef(\ambPlayer).stop;
 		Pdef(\pp).play;
 		~voiceDelPlayer = ~voiceDel.play;
 		r.reset;
