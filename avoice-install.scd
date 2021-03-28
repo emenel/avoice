@@ -94,7 +94,7 @@ s.waitForBoot {
 			)
 		);
 
-		Pdef(\pp, Pbind(\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1), \amp, 0) <> Pdef(\ppBase));
+		Pdef(\pp, Pbind(\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1), \amp, 0.7) <> Pdef(\ppBase));
 
 		Pdef(\ppBase).fadeTime = 1;
 		Pdef(\pp).fadeTime = 1;
@@ -123,7 +123,7 @@ s.waitForBoot {
 					\rand, Plprand(0.1, 1, length),
 					\overlaps, Pwhite(2, 16, length),
 					\legato, 1.05,
-					\out, 2
+					\out, 0//2
 				)
 		})], inf));
 
@@ -137,7 +137,7 @@ s.waitForBoot {
 		~target_r = Pxrand([
 			~getBufsForPhrase.value(["h","eh","l","oh"]),
 			~getBufsForPhrase.value(["s","p","ee","k","ee","ng"]),
-			~getBufsForPhrase.value(["d", "aw", "n"]),
+			~getBufsForPhrase.value(["d", "ah", "n"]),
 			~getBufsForPhrase.value(["d","r","ee","m"]),
 			~getBufsForPhrase.value(["h","aw","l","t","d"]),
 			~getBufsForPhrase.value(["t","i","m"]),
@@ -151,7 +151,9 @@ s.waitForBoot {
 			~getBufsForPhrase.value(["s","t","ai","s","ih","s"]),
 			~getBufsForPhrase.value(["s","p","i","r","a","l"]),
 			~getBufsForPhrase.value(["t","r","a","n","s","f","oh","r","m"]),
-			~getBufsForPhrase.value(["n","au","th","ee","ng","n","eh","s"])
+			~getBufsForPhrase.value(["n","uh","th","ee","ng","n","eh","s"]),
+			~getBufsForPhrase.value(["p","a","th","s"]),
+			~getBufsForPhrase.value(["t","uh","r","t","l"])
 		], inf);
 
 		r = Routine.new({|inval|
@@ -227,7 +229,6 @@ s.waitForBoot {
 	(
 		//start everything
 		Pdef(\ambPlayer).play;
-		Pdef(\ambPlayer).stop;
 		Pdef(\pp).play;
 		~voiceDelPlayer = ~voiceDel.play;
 		r.reset;
@@ -235,7 +236,3 @@ s.waitForBoot {
 	);
 
 }
-
-// RECORD TO MULTICHANNEL FILE
-// Server.default.record(numChannels: 2);
-// Server.default.stopRecording;
