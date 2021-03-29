@@ -112,7 +112,7 @@ s.waitForBoot {
 			\dur, Pwhite(0.5,10,3),
 			\legato, 1.05, \root, -12,
 			\degree, Ptuple([Pxrand((0..12), 3), Pxrand((0..12), 3), Pxrand((0..12), 3)]),
-			\out, 2,
+			\out, 0, //2
 			\scale, Scale.new(#[ 0, 1, 3, 5, 7, 8, 10 ], 13))
 		);
 
@@ -129,7 +129,7 @@ s.waitForBoot {
 					\rand, Plprand(0.1, 1, length),
 					\overlaps, Pwhite(2, 16, length),
 					\legato, 1.05,
-					\out, 2
+					\out, 0 //2
 				)
 		})], inf));
 
@@ -175,6 +175,8 @@ s.waitForBoot {
 
 			loop {
 
+				"ROUTINE LOOP".postln;
+
 				if(target == newvals, {
 					i = i+1;
 					pause = 1;
@@ -219,6 +221,8 @@ s.waitForBoot {
 
 					newvals.put(j,v);
 				});
+
+				newvals.postln;
 
 				Pdef(\pp, Pbind(\bufnum, Pseq(newvals, 1), \amp, 0.7) <> Pdef(\ppBase));
 
