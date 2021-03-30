@@ -95,7 +95,7 @@ s.waitForBoot {
 				\legato, 1.1
 			)
 		);
-		Pdef(\pp, Pbind(\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1), \amp, 0.7) <> Pdef(\ppBase));
+		Pdef(\pp, Pbind(\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1), \amp, 0.9) <> Pdef(\ppBase));
 		Pdef(\pp).fadeTime = 1;
 
 		~voiceDel = Pmono(\delLine, *[
@@ -218,7 +218,7 @@ s.waitForBoot {
 				});
 
 				// speak the new phonemes
-				Pdef(\pp, Pbind(\bufnum, Pseq(newvals, 1), \amp, 0.7) <> Pdef(\ppBase));
+				Pdef(\pp, Pbind(\bufnum, Pseq(newvals, 1), \amp, 0.9) <> Pdef(\ppBase));
 
 				//determine pause with velocity
 				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 7, 0.1, -3);
