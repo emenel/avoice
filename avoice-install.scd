@@ -9,11 +9,11 @@ s.waitForBoot {
 	//setup
 	(
 		//load samples
-		var loadSamps = {|dir|
+		~loadSamps = {|dir|
 			Array.fill(z.files.size, {|i| [z.files[i].fileNameWithoutExtension, Buffer.read(s, z.pathOnly+/+z.files[i].fileName)]});
 		};
-		~phonsamps = loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/phonemes/"));
-		~ambsamps = loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/samps/"));
+		~phonsamps = ~loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/phonemes/"));
+		~ambsamps = ~loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/samps/"));
 
 		//helper functions for managing the arrays of samples
 		~ambbufs = ~ambsamps.collect({|item|
@@ -25,14 +25,14 @@ s.waitForBoot {
 		});
 
 		~getBufForLetter = {|letter|
-			~phonsamps.detect({|item| item[0]==letter })[1].bufnum
+			~phonsamps.detect({|item| item[0]==letter })[1].bufnum;
 		};
 
 		~getBufsForPhrase = {|phrase|
-			phrase.collect({|item,i| ~getBufForLetter.value(item)})
+			phrase.collect({|item,i| ~getBufForLetter.value(item)});
 		};
 
-		TempoClock.default.tempo = 1;    // 2 beats/sec, or 120 BPM
+		TempoClock.default.tempo = 1;
 
 		// effect bus for the phoneme delay
 		~vdelbus = Bus.audio(s);
