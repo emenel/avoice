@@ -59,7 +59,7 @@ s.waitForBoot {
 			Out.ar(out, sig);
 		}).add;
 
-		SynthDef.new(\amb, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2|
+		SynthDef.new(\amb, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2, gate = 1|
 			var sig = Warp1.ar(numChannels: 2,
 				bufnum: bufnum,
 				pointer: Lag3.kr(position, dur/3),
@@ -70,6 +70,8 @@ s.waitForBoot {
 				windowRandRatio: Lag3.kr(rand,dur/5),
 				interp: 2,
 				mul: Lag3.kr(amp, dur/5), add: 0);
+			var env = Env.asr(dur*0.1, dur*0.8, dur*0.1, -4.0);
+			sig = sig*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
 			Out.ar(out, sig*0.8);
 		}).add;
 
@@ -175,11 +177,9 @@ s.waitForBoot {
 
 			loop {
 
-				"ROUTINE LOOP".postln;
-
 				if(target == newvals, {
 					i = i+1;
-					pause = 1;
+					// pause = 1;
 
 					Pdef(\ambPlayer, Pdef(\tonePlay));
 
@@ -212,7 +212,6 @@ s.waitForBoot {
 
 				target.do({ |item, j|
 					var v = newvals[j];
-					var ldlt = dlt;
 
 					case
 					{v == item} {v = v}
@@ -222,7 +221,7 @@ s.waitForBoot {
 					newvals.put(j,v);
 				});
 
-				newvals.postln;
+				// newvals.postln;
 
 				Pdef(\pp, Pbind(\bufnum, Pseq(newvals, 1), \amp, 0.7) <> Pdef(\ppBase));
 
