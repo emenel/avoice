@@ -8,45 +8,44 @@ s.boot;
 s.waitForBoot {
 	//setup
 	(
-		~vdelbus = Bus.audio(s);
-
-		TempoClock.default.tempo = 1;    // 2 beats/sec, or 120 BPM
-
 		//load samples
-		z = PathName.new(thisProcess.nowExecutingPath.dirname++"/phonemes/");
-		~phonsamps = Array.fill(z.files.size, {arg i; [z.files[i].fileNameWithoutExtension, Buffer.read(s, z.pathOnly+/+z.files[i].fileName)]});
+		var loadSamps = {|dir|
+			Array.fill(z.files.size, {|i| [z.files[i].fileNameWithoutExtension, Buffer.read(s, z.pathOnly+/+z.files[i].fileName)]});
+		};
+		~phonsamps = loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/phonemes/"));
+		~ambsamps = loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/samps/"));
 
-		y = PathName.new(thisProcess.nowExecutingPath.dirname++"/samps/");
-		~ambsamps = Array.fill(y.files.size, {arg i; [y.files[i].fileNameWithoutExtension, Buffer.read(s, y.pathOnly+/+y.files[i].fileName)]});
-
-		~ambbufs = ~ambsamps.collect({ arg item;
+		//helper functions for managing the arrays of samples
+		~ambbufs = ~ambsamps.collect({|item|
 			item[1].bufnum;
 		});
 
-		~phonbufs = ~phonsamps.collect({ arg item;
+		~phonbufs = ~phonsamps.collect({|item|
 			item[1].bufnum;
 		});
 
 		~getBufForLetter = {|letter|
-			~phonsamps.detect({ arg item; item[0]==letter })[1].bufnum
+			~phonsamps.detect({|item| item[0]==letter })[1].bufnum
 		};
 
 		~getBufsForPhrase = {|phrase|
 			phrase.collect({|item,i| ~getBufForLetter.value(item)})
 		};
 
-		~restTimes = [Rest(1),Rest(5),Rest(10),Rest(20),Rest(30)];
-		~r = 5;
-		~lastAmbLength;
+		TempoClock.default.tempo = 1;    // 2 beats/sec, or 120 BPM
+
+		// effect bus for the phoneme delay
+		~vdelbus = Bus.audio(s);
 	);
 
+	// synthdefs
 	(
-		SynthDef.new(\phonsynth, {|bufnum = 0, amp = 0, speed = 1, dur = 1, out = 0, bufstart = 10|
+		SynthDef(\phonsynth, {|bufnum = 0, amp = 0, speed = 1, dur = 1, out = 0, bufstart = 10|
 			var sig = PlayBuf.ar(1, bufnum, Lag3.kr(speed, dur/2), startPos: bufstart, doneAction: Done.freeSelf);
 			Out.ar([out,~vdelbus.index], sig*amp);
 		}).add;
 
-		SynthDef.new(\delLine, {|delaytime = 5, delayfactor = 0.5, win = 0.9, out, in|
+		SynthDef(\delLine, {|delaytime = 5, delayfactor = 0.5, win = 0.9, out, in|
 			var sig = SwitchDelay.ar(
 				in: In.ar(in),
 				drylevel: 0,
@@ -59,7 +58,7 @@ s.waitForBoot {
 			Out.ar(out, sig);
 		}).add;
 
-		SynthDef.new(\amb, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2, gate = 1|
+		SynthDef(\amb, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2, gate = 1|
 			var sig = Warp1.ar(numChannels: 2,
 				bufnum: bufnum,
 				pointer: Lag3.kr(position, dur/3),
@@ -75,7 +74,7 @@ s.waitForBoot {
 			Out.ar(out, sig*0.8);
 		}).add;
 
-		SynthDef.new(\tone, {|freq, out, amp = 0.8, gate = 1, dur|
+		SynthDef(\tone, {|freq, out, amp = 0.8, gate = 1, dur|
 			var sig;
 			var env = Env.asr(0.5, 1, 2, -4.0);
 			sig = DynKlang.ar(`[ freq, [0.33,0.33,0.33] ], 1, 0);
@@ -87,6 +86,7 @@ s.waitForBoot {
 
 	s.sync();
 
+	// patterns
 	(
 		Pdef(\ppBase,
 			Pbind(\instrument, \phonsynth,
@@ -95,10 +95,7 @@ s.waitForBoot {
 				\legato, 1.1
 			)
 		);
-
 		Pdef(\pp, Pbind(\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1), \amp, 0.7) <> Pdef(\ppBase));
-
-		Pdef(\ppBase).fadeTime = 1;
 		Pdef(\pp).fadeTime = 1;
 
 		~voiceDel = Pmono(\delLine, *[
@@ -133,15 +130,15 @@ s.waitForBoot {
 					\legato, 1.05,
 					\out, 0 //2
 				)
-		})], inf));
+			})
+		], inf));
 
 		Pdef(\ambPlayer, Pdef(\ambMono));
-
 		Pdef(\ambPlayer).fadeTime = 1;
 	);
 
+	//routines
 	(
-
 		~target_r = Pxrand([
 			~getBufsForPhrase.value(["h","eh","l","oh"]),
 			~getBufsForPhrase.value(["s","p","ee","k","ee","ng"]),
@@ -179,7 +176,6 @@ s.waitForBoot {
 
 				if(target == newvals, {
 					i = i+1;
-					// pause = 1;
 
 					Pdef(\ambPlayer, Pdef(\tonePlay));
 
@@ -221,8 +217,7 @@ s.waitForBoot {
 					newvals.put(j,v);
 				});
 
-				// newvals.postln;
-
+				// speak the new phonemes
 				Pdef(\pp, Pbind(\bufnum, Pseq(newvals, 1), \amp, 0.7) <> Pdef(\ppBase));
 
 				//determine pause with velocity
