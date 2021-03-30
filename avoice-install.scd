@@ -10,7 +10,7 @@ s.waitForBoot {
 	(
 		//load samples
 		~loadSamps = {|dir|
-			Array.fill(z.files.size, {|i| [z.files[i].fileNameWithoutExtension, Buffer.read(s, z.pathOnly+/+z.files[i].fileName)]});
+			Array.fill(dir.files.size, {|i| [dir.files[i].fileNameWithoutExtension, Buffer.read(s, dir.pathOnly+/+dir.files[i].fileName)]});
 		};
 		~phonsamps = ~loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/phonemes/"));
 		~ambsamps = ~loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/samps/"));
