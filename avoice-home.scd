@@ -1,6 +1,6 @@
 // computational environment, init
 (
-s.options.numOutputBusChannels = 4;
+s.options.numOutputBusChannels = 2;
 
 s.options.sampleRate = 44100;
 s.boot;
@@ -113,7 +113,7 @@ s.waitForBoot {
 			\dur, Pwhite(0.5,10,3),
 			\legato, 1.05, \root, -12,
 			\degree, Ptuple([Pxrand((0..12), 3), Pxrand((0..12), 3), Pxrand((0..12), 3)]),
-			\out, 2,
+			\out, 0,
 			\scale, Scale.new(#[ 0, 1, 3, 5, 7, 8, 10 ], 13))
 		);
 
@@ -130,7 +130,7 @@ s.waitForBoot {
 					\rand, Plprand(0.1, 1, length),
 					\overlaps, Pwhite(2, 16, length),
 					\legato, 1.05,
-					\out, 2
+					\out, 0
 				)
 			})
 		], inf));
@@ -220,6 +220,8 @@ s.waitForBoot {
 
 					newvals.put(j,v);
 				});
+
+				["target: ", target, "newvals:", newvals, "i:", i].postln;
 
 				// speak
 				Pbindef(\aVoiceTurnedToMeaning, \bufnum, Pseq(newvals, 1)).play;
