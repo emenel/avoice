@@ -88,15 +88,18 @@ s.waitForBoot {
 
 	// patterns
 	(
-		Pdef(\ppBase,
+		Pdef(\phonemes,
 			Pbind(\instrument, \phonsynth,
-				\dur, Pfunc({|d| (s.cachedBufferAt(d.bufnum).duration)-0.1}),
 				\speed, Pwhite(0.9,1.1,inf),
-				\legato, 1.1
+				\legato, 1.5,
+				\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1),
+				\dur, Pfunc({|d|
+					(s.cachedBufferAt(d.bufnum).duration-0.02);
+				}),
+				\amp, 0.9
 			)
 		);
-		Pdef(\pp, Pbind(\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1), \amp, 0.9) <> Pdef(\ppBase));
-		Pdef(\pp).fadeTime = 1;
+		Pdef(\phonemes).fadeTime = 0.5;
 
 		~voiceDel = Pmono(\delLine, *[
 			delaytime: 0.01,
@@ -121,7 +124,7 @@ s.waitForBoot {
 				Pmono(\amb,
 					\bufnum, Pxrand(~ambbufs, length),
 					\amp, Pseq([Pwhite(0.2, 0.3, length-2), 0, 0], 1),
-					\speed, Pwhite(0.01, 3.0, length),
+					\speed, Pwhite(0.01, 1.5, length),
 					\position, Pwhite(0, 1.0, length),
 					\win, Plprand(0.05, 10, length),
 					\dur, Pwhite(3, 15, length),
@@ -134,7 +137,7 @@ s.waitForBoot {
 		], inf));
 
 		Pdef(\ambPlayer, Pdef(\ambMono));
-		Pdef(\ambPlayer).fadeTime = 1;
+		Pdef(\ambPlayer).fadeTime = 2;
 	);
 
 	//routines
@@ -170,8 +173,6 @@ s.waitForBoot {
 			var pause = 1; //init placeholder pause
 			var initSum = (newvals-target).sum.abs;
 
-			// 30.wait;
-
 			loop {
 
 				if(target == newvals, {
@@ -197,11 +198,11 @@ s.waitForBoot {
 							initSum = (newvals-target).sum.abs;
 						});
 
-						((30.rand)+10).wait;
+						((20.rand)+10).wait;
 
 						Pdef(\ambPlayer, Pdef(\ambMono));
 
-						((30.rand)+5).wait;
+						((25.rand)+5).wait;
 
 					});
 				});
@@ -217,12 +218,13 @@ s.waitForBoot {
 					newvals.put(j,v);
 				});
 
+				// ["target: ", target, "newvals:", newvals, "i:", i].postln;
 				// speak the new phonemes
-				Pdef(\pp, Pbind(\bufnum, Pseq(newvals, 1), \amp, 0.9) <> Pdef(\ppBase));
+
+				Pbindef(\phonemes, \bufnum, Pseq(newvals, 1)).play;
 
 				//determine pause with velocity
 				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 7, 0.1, -3);
-
 				pause.yield;
 			}
 
@@ -233,7 +235,6 @@ s.waitForBoot {
 	(
 		//start everything
 		Pdef(\ambPlayer).play;
-		Pdef(\pp).play;
 		~voiceDelPlayer = ~voiceDel.play;
 		r.reset;
 		r.play;
