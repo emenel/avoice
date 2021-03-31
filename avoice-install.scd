@@ -1,3 +1,4 @@
+// computational environment, init
 (
 s.options.numOutputBusChannels = 4;
 
@@ -6,46 +7,44 @@ s.boot;
 );
 
 s.waitForBoot {
-	//setup
 	(
-		//load samples
-		~loadSamps = {|dir|
-			Array.fill(dir.files.size, {|i| [dir.files[i].fileNameWithoutExtension, Buffer.read(s, dir.pathOnly+/+dir.files[i].fileName)]});
-		};
-		~phonsamps = ~loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/phonemes/"));
-		~ambsamps = ~loadSamps.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/samps/"));
-
-		//helper functions for managing the arrays of samples
-		~ambbufs = ~ambsamps.collect({|item|
-			item[1].bufnum;
-		});
-
-		~phonbufs = ~phonsamps.collect({|item|
-			item[1].bufnum;
-		});
-
-		~getBufForLetter = {|letter|
-			~phonsamps.detect({|item| item[0]==letter })[1].bufnum;
-		};
-
-		~getBufsForPhrase = {|phrase|
-			phrase.collect({|item,i| ~getBufForLetter.value(item)});
-		};
-
 		TempoClock.default.tempo = 1;
 
-		// effect bus for the phoneme delay
-		~vdelbus = Bus.audio(s);
+		// cracking contingencies
+		~aCrack = Bus.audio(s);
+
+		//all the pieces, waiting
+		~searcher = {|dir|
+			Array.fill(dir.files.size, {|i| [dir.files[i].fileNameWithoutExtension, Buffer.read(s, dir.pathOnly+/+dir.files[i].fileName)]});
+		};
+		~fragments = ~searcher.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/phonemes/"));
+		~environments = ~searcher.value(PathName.new(thisProcess.nowExecutingPath.dirname++"/samps/"));
+
+		//a language for combining
+		~environmentIsNumbers = ~environments.collect({|item|
+			item[1].bufnum;
+		});
+
+		~languageIsNumbers = ~fragments.collect({|item|
+			item[1].bufnum;
+		});
+
+		~fragmentSearcher = {|letter|
+			~fragments.detect({|item| item[0]==letter })[1].bufnum;
+		};
+
+		~fragmentsConvertIntoCreation = {|phrase|
+			phrase.collect({|item,i| ~fragmentSearcher.value(item)});
+		};
 	);
 
-	// synthdefs
 	(
-		SynthDef(\phonsynth, {|bufnum = 0, amp = 0, speed = 1, dur = 1, out = 0, bufstart = 10|
+		SynthDef(\aVoice, {|bufnum = 0, amp = 0, speed = 1, dur = 1, out = 0, bufstart = 10|
 			var sig = PlayBuf.ar(1, bufnum, Lag3.kr(speed, dur/2), startPos: bufstart, doneAction: Done.freeSelf);
-			Out.ar([out,~vdelbus.index], sig*amp);
+			Out.ar([out,~aCrack.index], sig*amp);
 		}).add;
 
-		SynthDef(\delLine, {|delaytime = 5, delayfactor = 0.5, win = 0.9, out, in|
+		SynthDef(\anEcho, {|delaytime = 5, delayfactor = 0.5, win = 0.9, out, in|
 			var sig = SwitchDelay.ar(
 				in: In.ar(in),
 				drylevel: 0,
@@ -58,7 +57,7 @@ s.waitForBoot {
 			Out.ar(out, sig);
 		}).add;
 
-		SynthDef(\amb, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2, gate = 1|
+		SynthDef(\aWorld, {|bufnum, amp, speed, position, win, out, dur, overlaps = 8, rand = 0.2, gate = 1|
 			var sig = Warp1.ar(numChannels: 2,
 				bufnum: bufnum,
 				pointer: Lag3.kr(position, dur/3),
@@ -74,7 +73,7 @@ s.waitForBoot {
 			Out.ar(out, sig*0.8);
 		}).add;
 
-		SynthDef(\tone, {|freq, out, amp = 0.8, gate = 1, dur|
+		SynthDef(\aChorus, {|freq, out, amp = 0.8, gate = 1, dur|
 			var sig;
 			var env = Env.asr(0.5, 1, 2, -4.0);
 			sig = DynKlang.ar(`[ freq, [0.33,0.33,0.33] ], 1, 0);
@@ -86,31 +85,31 @@ s.waitForBoot {
 
 	s.sync();
 
-	// patterns
+	// patterns and repetitions
 	(
-		Pdef(\phonemes,
-			Pbind(\instrument, \phonsynth,
+		Pdef(\aVoiceTurnedToMeaning,
+			Pbind(\instrument, \aVoice,
 				\speed, Pwhite(0.9,1.1,inf),
 				\legato, 1.5,
-				\bufnum, Pseq(~getBufsForPhrase.value(["h","eh","l","oh"]), 1),
+				\bufnum, Pseq(~fragmentsConvertIntoCreation.value(["h","eh","l","oh"]), 1),
 				\dur, Pfunc({|d|
 					(s.cachedBufferAt(d.bufnum).duration-0.02);
 				}),
 				\amp, 0.9
 			)
 		);
-		Pdef(\phonemes).fadeTime = 0.5;
+		Pdef(\aVoiceTurnedToMeaning).fadeTime = 0.5;
 
-		~voiceDel = Pmono(\delLine, *[
+		~repeater = Pmono(\anEcho, *[
 			delaytime: 0.01,
 			delayfactor: Pxrand([0, 0.2, 0.1, 0.5], inf),
 			dur: Pxrand([0.1, 0.5, 1, 0.25], inf),
 			win: Pwhite(0.2, 2, inf),
-			in: ~vdelbus.index,
+			in: ~aCrack.index,
 			out: 1
 		]);
 
-		Pdef(\tonePlay, Pbind(\instrument, \tone,
+		Pdef(\aSong, Pbind(\instrument, \aChorus,
 			\dur, Pwhite(0.5,10,3),
 			\legato, 1.05, \root, -12,
 			\degree, Ptuple([Pxrand((0..12), 3), Pxrand((0..12), 3), Pxrand((0..12), 3)]),
@@ -118,11 +117,11 @@ s.waitForBoot {
 			\scale, Scale.new(#[ 0, 1, 3, 5, 7, 8, 10 ], 13))
 		);
 
-		Pdef(\ambMono, Pseq([
+		Pdef(\worldOfCombinations, Pseq([
 			Plazy({
 				var length = [2, 5, 10, 15].choose;
-				Pmono(\amb,
-					\bufnum, Pxrand(~ambbufs, length),
+				Pmono(\aWorld,
+					\bufnum, Pxrand(~environmentIsNumbers, length),
 					\amp, Pseq([Pwhite(0.2, 0.3, length-2), 0, 0], 1),
 					\speed, Pwhite(0.01, 1.5, length),
 					\position, Pwhite(0, 1.0, length),
@@ -136,38 +135,38 @@ s.waitForBoot {
 			})
 		], inf));
 
-		Pdef(\ambPlayer, Pdef(\ambMono));
-		Pdef(\ambPlayer).fadeTime = 2;
+		Pdef(\aPlaceToSpeak, Pdef(\worldOfCombinations));
+		Pdef(\aPlaceToSpeak).fadeTime = 2;
 	);
 
-	//routines
+	// practices
 	(
-		~target_r = Pxrand([
-			~getBufsForPhrase.value(["h","eh","l","oh"]),
-			~getBufsForPhrase.value(["s","p","ee","k","ee","ng"]),
-			~getBufsForPhrase.value(["d", "ah", "n"]),
-			~getBufsForPhrase.value(["d","r","ee","m"]),
-			~getBufsForPhrase.value(["h","aw","l","t","d"]),
-			~getBufsForPhrase.value(["t","i","m"]),
-			~getBufsForPhrase.value(["s","p","oh","k","eh","n"]),
-			~getBufsForPhrase.value(["y","oo","n","ih","t","ee","s"]),
-			~getBufsForPhrase.value(["m","oh","m","eh","n","t"]),
-			~getBufsForPhrase.value(["eh","n","ch","a","n","t"]),
-			~getBufsForPhrase.value(["j","oi"]),
-			~getBufsForPhrase.value(["b","a","k","g","r","ow","n","d"]),
-			~getBufsForPhrase.value(["r","eh","p","eh","t","ih","sh","ih","n"]),
-			~getBufsForPhrase.value(["s","t","ai","s","ih","s"]),
-			~getBufsForPhrase.value(["s","p","i","r","a","l"]),
-			~getBufsForPhrase.value(["t","r","a","n","s","f","oh","r","m"]),
-			~getBufsForPhrase.value(["n","uh","th","ee","ng","n","eh","s"]),
-			~getBufsForPhrase.value(["p","a","th","s"]),
-			~getBufsForPhrase.value(["t","uh","r","t","l"])
+		~piecesOfTheWorld = Pxrand([
+			~fragmentsConvertIntoCreation.value(["h","eh","l","oh"]),
+			~fragmentsConvertIntoCreation.value(["s","p","ee","k","ee","ng"]),
+			~fragmentsConvertIntoCreation.value(["d", "ah", "n"]),
+			~fragmentsConvertIntoCreation.value(["d","r","ee","m"]),
+			~fragmentsConvertIntoCreation.value(["h","aw","l","t","d"]),
+			~fragmentsConvertIntoCreation.value(["t","i","m"]),
+			~fragmentsConvertIntoCreation.value(["s","p","oh","k","eh","n"]),
+			~fragmentsConvertIntoCreation.value(["y","oo","n","ih","t","ee","s"]),
+			~fragmentsConvertIntoCreation.value(["m","oh","m","eh","n","t"]),
+			~fragmentsConvertIntoCreation.value(["eh","n","ch","a","n","t"]),
+			~fragmentsConvertIntoCreation.value(["j","oi"]),
+			~fragmentsConvertIntoCreation.value(["b","a","k","g","r","ow","n","d"]),
+			~fragmentsConvertIntoCreation.value(["r","eh","p","eh","t","ih","sh","ih","n"]),
+			~fragmentsConvertIntoCreation.value(["s","t","ai","s","ih","s"]),
+			~fragmentsConvertIntoCreation.value(["s","p","i","r","a","l"]),
+			~fragmentsConvertIntoCreation.value(["t","r","a","n","s","f","oh","r","m"]),
+			~fragmentsConvertIntoCreation.value(["n","uh","th","ee","ng","n","eh","s"]),
+			~fragmentsConvertIntoCreation.value(["p","a","th","s"]),
+			~fragmentsConvertIntoCreation.value(["t","uh","r","t","l"])
 		], inf);
 
 		r = Routine.new({|inval|
-			var ts = ~target_r.asStream;
+			var ts = ~piecesOfTheWorld.asStream;
 			var target = List.newUsing(ts.next);
-			var newvals = List.fill(target.size, { rand(~phonbufs.size) });
+			var newvals = List.fill(target.size, { rand(~languageIsNumbers.size) });
 			var i = 0;
 			var dlt = 1;
 			var pause = 1; //init placeholder pause
@@ -178,7 +177,7 @@ s.waitForBoot {
 				if(target == newvals, {
 					i = i+1;
 
-					Pdef(\ambPlayer, Pdef(\tonePlay));
+					Pdef(\aPlaceToSpeak, Pdef(\aSong));
 
 					if(i == 4, {
 						i = 0;
@@ -187,7 +186,7 @@ s.waitForBoot {
 
 						if(target.size > newvals.size, {
 							(target.size - newvals.size).do({
-								newvals.add(rand(~phonbufs.size));
+								newvals.add(rand(~languageIsNumbers.size));
 							});
 						});
 						if(target.size < newvals.size, { newvals = newvals.copyRange(0,target.size-1) });
@@ -200,7 +199,7 @@ s.waitForBoot {
 
 						((20.rand)+10).wait;
 
-						Pdef(\ambPlayer, Pdef(\ambMono));
+						Pdef(\aPlaceToSpeak, Pdef(\worldOfCombinations));
 
 						((25.rand)+5).wait;
 
@@ -221,7 +220,7 @@ s.waitForBoot {
 				// ["target: ", target, "newvals:", newvals, "i:", i].postln;
 				// speak the new phonemes
 
-				Pbindef(\phonemes, \bufnum, Pseq(newvals, 1)).play;
+				Pbindef(\aVoiceTurnedToMeaning, \bufnum, Pseq(newvals, 1)).play;
 
 				//determine pause with velocity
 				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 7, 0.1, -3);
@@ -233,9 +232,9 @@ s.waitForBoot {
 	);
 
 	(
-		//start everything
-		Pdef(\ambPlayer).play;
-		~voiceDelPlayer = ~voiceDel.play;
+		// begin
+		Pdef(\aPlaceToSpeak).play;
+		~repeater.play;
 		r.reset;
 		r.play;
 	);
