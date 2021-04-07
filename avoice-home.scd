@@ -45,7 +45,7 @@ s.waitForBoot {
 		}).add;
 
 		SynthDef(\anEcho, {|delaytime = 5, delayfactor = 0.5, win = 0.9, out, in|
-			var sig = SwitchDelay.ar(
+			var sig = SwitchDelay.ar( // SWAP THIS OUT FOR SOMETHING THAT IS BUILT IN
 				in: In.ar(in),
 				drylevel: 0,
 				wetlevel: 0.7,

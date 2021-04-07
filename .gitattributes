@@ -65,3 +65,4 @@ samps/MixPre-018.wav filter=lfs diff=lfs merge=lfs -text
 samps/bell.wav filter=lfs diff=lfs merge=lfs -text
 samps/papert.wav filter=lfs diff=lfs merge=lfs -text
 samps/yiddish1.wav filter=lfs diff=lfs merge=lfs -text
+samps/ambience.wav filter=lfs diff=lfs merge=lfs -text
