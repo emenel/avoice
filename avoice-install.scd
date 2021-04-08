@@ -8,7 +8,7 @@ s.boot;
 
 s.waitForBoot {
 	(
-		TempoClock.default.tempo = 1;
+		TempoClock.default.tempo = 0.5;
 
 		// cracking contingencies
 		~aCrack = Bus.audio(s);
@@ -126,7 +126,7 @@ s.waitForBoot {
 					\speed, Pwhite(0.01, 1.5, length),
 					\position, Pwhite(0, 1.0, length),
 					\win, Plprand(0.05, 10, length),
-					\dur, Pwhite(3, 15, length),
+					\dur, Pwhite(5, 20, length),
 					\rand, Plprand(0.1, 1, length),
 					\overlaps, Pwhite(2, 16, length),
 					\legato, 1.05,
@@ -225,7 +225,7 @@ s.waitForBoot {
 				Pbindef(\aVoiceTurnedToMeaning, \bufnum, Pseq(newvals, 1)).play;
 
 				// wait, think
-				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 7, 0.1, -3);
+				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 10, 0.1, -4);
 				pause.yield;
 			}
 
