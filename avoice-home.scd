@@ -41,6 +41,7 @@ s.waitForBoot {
 	(
 		SynthDef(\aVoice, {|bufnum = 0, amp = 0, speed = 1, dur = 1, out = 0, bufstart = 10|
 			var sig = PlayBuf.ar(1, bufnum, Lag3.kr(speed, dur/2), startPos: bufstart, doneAction: Done.freeSelf);
+			sig = LPF.ar(in: sig, freq: 11000);
 			Out.ar([out,~aCrack.index], sig*amp);
 		}).add;
 
@@ -93,7 +94,7 @@ s.waitForBoot {
 				\legato, 1.5,
 				\bufnum, Pseq(~fragmentsConvertIntoCreation.value(["h","eh","l","oh"]), 1),
 				\dur, Pfunc({|d|
-					(s.cachedBufferAt(d.bufnum).duration-0.02);
+					(s.cachedBufferAt(d.bufnum).duration-0.05);
 				}),
 				\amp, 0.9
 			)
@@ -221,13 +222,13 @@ s.waitForBoot {
 					newvals.put(j,v);
 				});
 
-				["target: ", target, "newvals:", newvals, "i:", i].postln;
+				["target:", target, "newvals:", newvals, "i:", i].postln;
 
 				// speak
 				Pbindef(\aVoiceTurnedToMeaning, \bufnum, Pseq(newvals, 1)).play;
 
 				// wait, think
-				pause = ((newvals-target).sum.abs / initSum).lincurve(0, 1, 10, 0.1, -4);
+				pause = (((newvals-target).sum.abs / initSum)*10).linexp(0, 10, 10, 0.1, -3);
 				pause.yield;
 			}
 
