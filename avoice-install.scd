@@ -68,10 +68,10 @@ s.waitForBoot {
 				overlaps: Lag3.kr(overlaps,dur/5),
 				windowRandRatio: Lag3.kr(rand,dur/5),
 				interp: 2,
-				mul: 0.7, add: 0);
+				mul: 0.5, add: 0);
 			var env = Env.asr(dur*0.1, dur*0.8, dur*0.1, -4.0);
 			sig = sig*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
-			Out.ar(out, sig*Lag3.kr(amp, dur/10));
+			Out.ar(out, sig*Lag3.kr(amp*0.2, dur/10));
 		}).add;
 
 		SynthDef(\aChorus, {|freq, out, amp, gate = 1, dur|
