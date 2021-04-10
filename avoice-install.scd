@@ -71,10 +71,10 @@ s.waitForBoot {
 				mul: Lag3.kr(amp, dur/5), add: 0);
 			var env = Env.asr(dur*0.1, dur*0.8, dur*0.1, -4.0);
 			sig = sig*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
-			Out.ar(out, sig*0.7);
+			Out.ar(out, sig*0.5);
 		}).add;
 
-		SynthDef(\aChorus, {|freq, out, amp = 1, gate = 1, dur|
+		SynthDef(\aChorus, {|freq, out, amp = 0.8, gate = 1, dur|
 			var sig;
 			var env = Env.asr(0.5, 1, 2, -4.0);
 			sig = DynKlang.ar(`[ freq, [0.33,0.33,0.33] ], 1, 0);
