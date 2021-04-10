@@ -71,7 +71,7 @@ s.waitForBoot {
 				mul: Lag3.kr(amp, dur/5), add: 0);
 			var env = Env.asr(dur*0.1, dur*0.8, dur*0.1, -4.0);
 			sig = sig*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
-			Out.ar(out, sig*0.8);
+			Out.ar(out, sig*0.7);
 		}).add;
 
 		SynthDef(\aChorus, {|freq, out, amp = 1, gate = 1, dur|
@@ -80,7 +80,7 @@ s.waitForBoot {
 			sig = DynKlang.ar(`[ freq, [0.33,0.33,0.33] ], 1, 0);
 			sig = Mix.new([sig, HPF.ar(WhiteNoise.ar(0.02), 15000, 1)]);
 			sig = Pan2.ar(sig, FSinOsc.kr(0.25), 1)*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
-			Out.ar(out, sig*amp)
+			Out.ar(out, sig)
 		}).add;
 	);
 
