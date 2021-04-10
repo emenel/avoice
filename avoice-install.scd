@@ -71,16 +71,16 @@ s.waitForBoot {
 				mul: 0.7, add: 0);
 			var env = Env.asr(dur*0.1, dur*0.8, dur*0.1, -4.0);
 			sig = sig*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
-			Out.ar(out, sig*Lag3.kr(amp, dur/6));
+			Out.ar(out, sig*Lag3.kr(amp, dur/10));
 		}).add;
 
-		SynthDef(\aChorus, {|freq, out, amp = 0.8, gate = 1, dur|
+		SynthDef(\aChorus, {|freq, out, amp, gate = 1, dur|
 			var sig;
 			var env = Env.asr(0.5, 1, 2, -4.0);
-			sig = DynKlang.ar(`[ freq, [0.25,0.25,0.25] ], 1, 0);
+			sig = DynKlang.ar(`[ freq, [0.15,0.15,0.15] ], 1, 0);
 			sig = Mix.new([sig, HPF.ar(WhiteNoise.ar(0.02), 15000, 1)]);
 			sig = Pan2.ar(sig, FSinOsc.kr(0.25), 1)*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
-			Out.ar(out, sig)
+			Out.ar(out, sig*amp)
 		}).add;
 	);
 
@@ -114,6 +114,7 @@ s.waitForBoot {
 			\dur, Pwhite(0.5,10,3),
 			\legato, 1.05, \root, -12,
 			\degree, Ptuple([Pxrand((0..12), 3), Pxrand((0..12), 3), Pxrand((0..12), 3)]),
+			\amp, 0.25,
 			\out, 2,
 			\scale, Scale.new(#[ 0, 1, 3, 5, 7, 8, 10 ], 13))
 		);
