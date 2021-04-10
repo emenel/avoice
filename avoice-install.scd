@@ -67,8 +67,7 @@ s.waitForBoot {
 				envbufnum: -1,
 				overlaps: Lag3.kr(overlaps,dur/5),
 				windowRandRatio: Lag3.kr(rand,dur/5),
-				interp: 2,
-				mul: 0.5, add: 0);
+				interp: 2);
 			var env = Env.asr(dur*0.1, dur*0.8, dur*0.1, -4.0);
 			sig = sig*EnvGen.kr(env, gate, doneAction: Done.freeSelf);
 			Out.ar(out, sig*Lag3.kr(amp*0.2, dur/10));
