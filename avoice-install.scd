@@ -161,6 +161,7 @@ s.waitForBoot {
 			~fragmentsConvertIntoCreation.value(["t","r","a","n","s","f","oh","r","m"]),
 			~fragmentsConvertIntoCreation.value(["n","uh","th","ee","ng","n","eh","s"]),
 			~fragmentsConvertIntoCreation.value(["p","a","th","s"]),
+			~fragmentsConvertIntoCreation.value(["ch","ai","n","ge","s"]),
 			~fragmentsConvertIntoCreation.value(["t","uh","r","t","l"])
 		], inf);
 
