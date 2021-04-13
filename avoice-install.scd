@@ -1,7 +1,6 @@
 // computational environment, init
 (
 s.options.numOutputBusChannels = 4;
-
 s.options.sampleRate = 44100;
 s.boot;
 );
