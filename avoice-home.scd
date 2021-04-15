@@ -41,7 +41,7 @@ s.waitForBoot {
 	(
 		SynthDef(\aVoice, {|bufnum = 0, amp = 0, speed = 1, dur = 1, out = 0, bufstart = 10|
 			var sig = PlayBuf.ar(1, bufnum, Lag3.kr(speed, dur/2), startPos: bufstart, doneAction: Done.freeSelf);
-			sig = LPF.ar(in: sig, freq: 11000);
+			sig = LPF.ar(in: sig, freq: 14000);
 			Out.ar([out,~aCrack.index], sig*amp);
 		}).add;
 
@@ -161,6 +161,7 @@ s.waitForBoot {
 			~fragmentsConvertIntoCreation.value(["t","r","a","n","s","f","oh","r","m"]),
 			~fragmentsConvertIntoCreation.value(["n","uh","th","ee","ng","n","eh","s"]),
 			~fragmentsConvertIntoCreation.value(["p","a","th","s"]),
+			~fragmentsConvertIntoCreation.value(["ch","ai","n","ge","s"]),
 			~fragmentsConvertIntoCreation.value(["t","uh","r","t","l"])
 		], inf);
 
@@ -201,12 +202,12 @@ s.waitForBoot {
 							initSum = (newvals-target).sum.abs;
 						});
 
-						((30.rand)+10).wait;
+						((20.rand)+10).wait;
 
 						// the world returns
 						Pdef(\aPlaceToSpeak, Pdef(\worldOfCombinations));
 
-						((30.rand)+5).wait;
+						((25.rand)+5).wait;
 
 					});
 				});
@@ -243,5 +244,8 @@ s.waitForBoot {
 		r.reset;
 		r.play;
 	);
+
+	Server.default.record(numChannels: 2);
+
 
 }

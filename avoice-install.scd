@@ -109,7 +109,7 @@ s.waitForBoot {
 		]);
 
 		Pdef(\aSong, Pbind(\instrument, \aChorus,
-			\dur, Pwhite(0.5,10,3),
+			\dur, Pwhite(2,15,3),
 			\legato, 1.05, \root, -12,
 			\degree, Ptuple([Pxrand((0..12), 3), Pxrand((0..12), 3), Pxrand((0..12), 3)]),
 			\amp, 0.25,
