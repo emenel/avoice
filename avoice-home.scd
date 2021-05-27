@@ -1,7 +1,6 @@
 // computational environment, init
 (
 s.options.numOutputBusChannels = 2;
-
 s.options.sampleRate = 44100;
 s.boot;
 );
@@ -95,7 +94,7 @@ s.waitForBoot {
 				\dur, Pfunc({|d|
 					(s.cachedBufferAt(d.bufnum).duration-0.05);
 				}),
-				\amp, 0.9
+				\amp, 0.7
 			)
 		);
 		Pdef(\aVoiceTurnedToMeaning).fadeTime = 0.5;
@@ -245,7 +244,7 @@ s.waitForBoot {
 		r.play;
 	);
 
-	Server.default.record(numChannels: 2);
-
+	// uncomment to record
+	// Server.default.record(numChannels: 2);
 
 }
